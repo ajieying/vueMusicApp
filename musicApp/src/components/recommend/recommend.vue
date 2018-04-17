@@ -1,13 +1,14 @@
 <template>
   <div class="recommend" ref="recommend">
-      <div>
+      <div class="recommend-content">
         <div class="slider-wrapper">
-
-            <div>
-              <a>
-                <img class="needsclick"  src="">
+          <slider v-if="recommends.length">
+            <div v-for="item in recommends" :key="item.id">
+              <a :href="item.linkUrl">
+                <img :src="item.picUrl" />
               </a>
             </div>
+          </slider>
         </div>
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
@@ -24,19 +25,48 @@
           </ul>
         </div>
       </div>
-      <div class="loading-container">
-      </div>
+      <!--<div class="loading-container"></div>-->
   </div>
 </template>
 
 <script type="text/ecmascript-6">
+import Slider from '@/base/slider/slider'
+import {getRecommend, getDiscList} from '@/api/recommend'
+import {ERR_OK} from '@/api/config'
 
-export default {}
+export default {
+  components: {
+    Slider
+  },
+  data() {
+    return {
+      recommends: []
+    }
+  },
+  created() {
+    this._getRecommend()
+    this._getDiscList()
+  },
+  methods: {
+    _getRecommend () {
+      getRecommend().then((res) => {
+        if (res.code === ERR_OK) {
+          this.recommends = res.data.slider
+        }
+      })
+    },
+    _getDiscList() {
+      getDiscList().then((res) => {
+        if (res.code === ERR_OK) {
+          console.log(res.data.list)
+        }
+      })
+    }
+  }
+}
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
-  @import "~@/common/stylus/variable"
-
   .recommend
     position: fixed
     width: 100%

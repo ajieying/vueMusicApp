@@ -1,25 +1,24 @@
 <template>
   <div id="app">
     <m-header></m-header>
+    <tab></tab>
+    <keep-alive>
+      <router-view></router-view>
+    </keep-alive>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
 import MHeader from '@/components/m-header/m-header'
+import Tab from '@/components/tab/tab'
+import RecommendTag from '@/components/recommend/recommend'
 export default {
   name: 'App',
   components: {
-    MHeader
+    MHeader,
+    Tab,
+    RecommendTag
   }
 }
 </script>
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
+<style></style>

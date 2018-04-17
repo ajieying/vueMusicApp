@@ -9,6 +9,30 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
+var axios = require('axios')
+const express = require('express');
+const app = express();
+var apiRoutes = express.Router();
+// apiRoutes.get('/getDiscList',function (req,res) {
+//   var url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
+//   axios.get(url,{
+//     headers:{
+//       referer:'https://c.y.qq.com',
+//       host:'c.y.qq.com'
+//     },
+//     params:req.query,
+//   }).then((resopnse)=>{
+//     res.json(resopnse.data)
+//   }).catch((e)=>{
+//     console.log(e)
+//   })
+// })
+// var appData = require('../data.json');//加载本地数据文件
+// var seller = appData.seller;//获取对应的本地数据
+// var goods = appData.goods;
+// var ratings = appData.ratings;
+
+app.use('/api', apiRoutes);
 
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
@@ -42,6 +66,27 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     quiet: true, // necessary for FriendlyErrorsPlugin
     watchOptions: {
       poll: config.dev.poll,
+    },
+    before(app) {
+      app.get('/api/getDiscList', (req, res) => {
+        var url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
+        axios.get(url,{
+          headers:{
+            referer:'https://c.y.qq.com',
+            host:'c.y.qq.com'
+          },
+          params:req.query,
+        }).then((resopnse)=>{
+          res.json(resopnse.data)
+        }).catch((e)=>{
+          console.log(e)
+        })
+        // res.json({
+        //   errno: 0,
+        //   data: seller
+        // })
+        //接口返回json数据，上面配置的数据seller就赋值给data请求后调用
+      })
     }
   },
   plugins: [
