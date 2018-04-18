@@ -1,42 +1,51 @@
 <template>
   <div class="recommend" ref="recommend">
-      <div class="recommend-content">
-        <div class="slider-wrapper">
-          <slider v-if="recommends.length">
-            <div v-for="item in recommends" :key="item.id">
-              <a :href="item.linkUrl">
-                <img :src="item.picUrl" />
-              </a>
-            </div>
-          </slider>
-        </div>
-        <div class="recommend-list">
-          <h1 class="list-title">热门歌单推荐</h1>
-          <ul>
-            <li v-for="item in descList" class="item" :key="item.dissid">
-              <div class="icon">
-                <img :src="item.imgurl" width="60" height="60" />
+      <scroll ref="scroll" class="recommend-content" :data="descList">
+        <div>
+          <div class="slider-wrapper">
+            <slider v-if="recommends.length">
+              <div v-for="item in recommends" :key="item.id">
+                <a :href="item.linkUrl">
+                  <img @load="loadImage" :src="item.picUrl" />
+                </a>
               </div>
-              <div class="text">
-                <h2 class="name" v-html="item.creator.name"></h2>
-                <p class="desc" v-html="item.dissname"></p>
-              </div>
-            </li>
-          </ul>
+            </slider>
+          </div>
+          <div class="recommend-list">
+            <h1 class="list-title">热门歌单推荐</h1>
+            <ul>
+              <li v-for="item in descList" class="item" :key="item.dissid">
+                <div class="icon">
+                  <img v-lazy="item.imgurl" width="60" height="60" />
+                </div>
+                <div class="text">
+                  <h2 class="name" v-html="item.creator.name"></h2>
+                  <p class="desc" v-html="item.dissname"></p>
+                </div>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
+        <div class="loadingContainer" v-show="!descList.length">
+          <loading></loading>
+        </div>
+      </scroll>
       <!--<div class="loading-container"></div>-->
   </div>
 </template>
 
 <script type="text/ecmascript-6">
+import Scroll from '@/base/scroll/scroll'
 import Slider from '@/base/slider/slider'
+import Loading from '@/base/loading/loading'
 import {getRecommend, getDiscList} from '@/api/recommend'
 import {ERR_OK} from '@/api/config'
 
 export default {
   components: {
-    Slider
+    Slider,
+    Scroll,
+    Loading
   },
   data() {
     return {
@@ -63,12 +72,19 @@ export default {
           // console.log(res.data.list)
         }
       })
+    },
+    loadImage() {
+      if (!this.checkLoaded) {
+        this.$refs.scroll.refresh()
+        this.checkLoaded = true
+      }
     }
   }
 }
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
+  @import "~@/common/stylus/variable"
   .recommend
     position: fixed
     width: 100%
