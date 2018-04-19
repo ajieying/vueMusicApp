@@ -29,7 +29,6 @@ export default {
         if (res.code === ERR_OK) {
           // this.singers = res.data.list
           this.singers = this._normalizeSinger(res.data.list)
-          console.log(this.singers)
         }
       })
     },
