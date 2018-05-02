@@ -16,12 +16,20 @@
         <li v-for="(item, index) in shortcutList" class="item" :key="index" :data-index="index" :class="{'current':currentIndex === index}">{{item}}</li>
       </ul>
     </div>
+    <div class="list-fixed" v-show="fixedTitle" ref="fixed">
+      <h3 class="fixed-title">{{fixedTitle}}</h3>
+    </div>
+    <div v-show="!data.length" class="loadingContainer">
+      <loading></loading>
+    </div>
   </scroll>
 </template>
 <script type="text/ecmascript-6">
 import Scroll from '@/base/scroll/scroll'
 import {getData} from '@/common/js/dom'
+import Loading from '@/base/loading/loading'
 const ANCHOR_HEIGHT = 18
+const TITLE_HEIGHT = 30
 export default {
   props: {
     data: {
@@ -36,16 +44,22 @@ export default {
       return this.data.map((group) => {
         return group.title.substr(0, 1)
       })
+    },
+    fixedTitle() {
+      if (this.scrollY > 0) { return '' }
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
     }
   },
   data() {
     return {
       scrollY: -1,
-      currentIndex: 0
+      currentIndex: 0,
+      diff: -1
     }
   },
   components: {
-    Scroll
+    Scroll,
+    Loading
   },
   created() {
     // vue中会对data和computed的项目中的值添加getter和setter的监听以作视图层和数据层的变化，此处只需要在两个方法中能回去到该数据，因为this.touch对象不需要监听，所以不添加在data和computed中
@@ -73,11 +87,20 @@ export default {
         let height2 = listHeight[i + 1]
         if ((!height2) || ((-newY) >= height1 && (-newY) < height2)) {
           this.currentIndex = i
+          this.diff = height2 + newY
           return
         }
       }
       // 当滚动到底部，且-newY大于最后一个元素的上限
       this.currentIndex = listHeight.length - 2
+    },
+    diff(newVal) {
+      let fixedTop = (newVal > 0 && newVal < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
+      if (this.fixedTop === fixedTop) {
+        return
+      }
+      this.fixedTop = fixedTop
+      this.$refs.fixed.style.transform = `translate3d(0,${fixedTop}px,0)`
     }
   },
   methods: {
@@ -96,6 +119,15 @@ export default {
       this._scrollTo(anchorIndex)
     },
     _scrollTo(index) {
+      if (!index && index !== 0) {
+        return
+      }
+      if (index < 0) {
+        index = 0
+      } else if (index > this.listHeight.length - 2) {
+        index = this.listHeight.length - 2
+      }
+      this.scrollY = -this.listHeight[index]
       this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)// 0 表示动画缓动的时间
     },
     scroll(pos) {
