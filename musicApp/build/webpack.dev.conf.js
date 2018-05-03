@@ -87,6 +87,21 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         // })
         //接口返回json数据，上面配置的数据seller就赋值给data请求后调用
       })
+      app.get('/api/getVkey', (req, res) => {
+        console.log(123)
+        var url = 'https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg'
+        axios.get(url,{
+          headers:{
+            referer:'https://c.y.qq.com',
+            host:'c.y.qq.com'
+          },
+          params:req.query,
+        }).then((resopnse)=>{
+          res.json(resopnse.data)
+        }).catch((e)=>{
+          console.log(e)
+        })
+      })
     }
   },
   plugins: [

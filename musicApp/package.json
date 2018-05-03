@@ -19,7 +19,8 @@
     "jsonp": "^0.2.1",
     "better-scroll": "^1.9.1",
     "axios": "^0.18.0",
-    "vue-lazyload": "^1.2.3"
+    "vue-lazyload": "^1.2.3",
+    "vuex":"^3.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
