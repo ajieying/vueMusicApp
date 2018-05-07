@@ -47,12 +47,12 @@ export default {
           //   console.log(res)
           // })
           this.songs = this._normalizeSongs(res.data.list)
-          console.log(this.songs)
+          // console.log(this.songs)
         }
       })
     },
     _normalizeSongs(list) {
-      console.log(this.singer)
+      // console.log(this.singer)
       let ret = []
       list.forEach((item) => {
         let {musicData} = item

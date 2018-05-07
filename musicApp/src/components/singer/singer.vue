@@ -30,7 +30,6 @@ export default {
       this.$router.push({
         path: `/singer/${singer.id}`
       })
-      console.log(singer)
       this.setSinger(singer)// 实现vuex状态的更改
     },
     _getSingerList() {

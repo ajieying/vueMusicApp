@@ -1,6 +1,6 @@
 <template>
   <div class="music-list">
-    <div class="back">
+    <div class="back" @click="back">
       <i class="icon-back"></i>
     </div>
     <h1 class="title" v-html="title"></h1>
@@ -14,17 +14,25 @@
       <div class="filter" ref="filter"></div>
     </div>
     <div class="bg-layer" ref="layer"></div>
-    <!--<scroll :data="songs" class="list" ref="list">-->
-      <!--<div class="song-list-wrapper">-->
-        <!--<song-list :songs="songs"></song-list>-->
-      <!--</div>-->
-      <!--<div v-show="!songs.length" class="loading-container">-->
-        <!--&lt;!&ndash;<loading></loading>&ndash;&gt;-->
-      <!--</div>-->
-    <!--</scroll>-->
+    <scroll @scroll="scroll" :data="songs" class="list" ref="list" :probeType="probeType" :listenScroll="listenScroll">
+      <div class="song-list-wrapper">
+        <song-list :songs="songs"></song-list>
+      </div>
+      <div v-show="!songs.length" class="loading-container">
+        <loading></loading>
+      </div>
+    </scroll>
   </div>
 </template>
 <script type="text/ecmascript-6">
+import SongList from '@/base/song-list/song-list'
+import Scroll from '@/base/scroll/scroll'
+import Loading from '@/base/loading/loading'
+import {prefixStyle} from '@/common/js/dom'
+
+const transform = prefixStyle('transform')
+const backdrop = prefixStyle('backdrop-filter')
+const RESERVED_HEIGHT = 40
 export default {
   props: {
     bgImage: {
@@ -45,6 +53,63 @@ export default {
   computed: {
     bgStyle() {
       return `background-image:url(${this.bgImage})`
+    }
+  },
+  data() {
+    return {
+      scrollY: 0
+    }
+  },
+  components: {
+    SongList,
+    Scroll,
+    Loading
+  },
+  created() {
+    this.probeType = 3
+    this.listenScroll = true
+  },
+  mounted() {
+    this.imgHeight = this.$refs.bgImage.clientHeight
+    this.minTranslateY = -this.imgHeight + RESERVED_HEIGHT
+    this.$refs.list.$el.style.top = `${this.$refs.bgImage.clientHeight}px`
+  },
+  watch: {
+    scrollY(newY) {
+      let translateY = Math.max(this.minTranslateY, newY)
+      let zIndex = 0
+      let scale = 1
+      let blur = 0
+      this.$refs.layer.style[transform] = `translate3d(0,${translateY}px,0)`
+      const percent = Math.abs(newY / this.imgHeight)
+      if (newY > 0) {
+        scale = 1 + percent
+        zIndex = 10
+      } else {
+        blur = Math.min(20 * percent, 20)
+      }
+      this.$refs.filter.style[backdrop] = `blur(${blur}px)`
+      if (newY < this.minTranslateY) {
+        zIndex = 10
+        this.$refs.bgImage.style.paddingTop = 0
+        this.$refs.bgImage.style.height = `${RESERVED_HEIGHT}px`
+        this.$refs.playBtn.style.display = 'none'
+      } else {
+        // zIndex = 0
+        this.$refs.bgImage.style.paddingTop = '70%'
+        this.$refs.bgImage.style.height = 0
+        this.$refs.playBtn.style.display = 'block'
+      }
+      this.$refs.bgImage.style.zIndex = zIndex
+      this.$refs.bgImage.style[transform] = `scale(${scale})`
+    }
+  },
+  methods: {
+    scroll(pos) {
+      this.scrollY = pos.y
+    },
+    back() {
+      this.$router.back()
     }
   }
 }
