@@ -5,6 +5,7 @@
     <keep-alive>
       <router-view></router-view>
     </keep-alive>
+    <player></player>
   </div>
 </template>
 
@@ -12,12 +13,14 @@
 import MHeader from '@/components/m-header/m-header'
 import Tab from '@/components/tab/tab'
 import RecommendTag from '@/components/recommend/recommend'
+import Player from '@/components/player/player'
 export default {
   name: 'App',
   components: {
     MHeader,
     Tab,
-    RecommendTag
+    RecommendTag,
+    Player
   }
 }
 </script>
