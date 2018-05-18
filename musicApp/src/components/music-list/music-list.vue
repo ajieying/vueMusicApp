@@ -29,6 +29,7 @@ import SongList from '@/base/song-list/song-list'
 import Scroll from '@/base/scroll/scroll'
 import Loading from '@/base/loading/loading'
 import {prefixStyle} from '@/common/js/dom'
+import {getVkey} from '@/api/singer'
 import {mapActions} from 'vuex'
 
 const transform = prefixStyle('transform')
@@ -113,9 +114,14 @@ export default {
       this.$router.back()
     },
     selectItem(item, index) {
-      this.selectPlay({
-        list: this.songs,
-        index: index
+      getVkey(this.songs[index].mid).then(res => {
+        // console.log(res.data.items[0].vkey)
+        let url = `https://dl.stream.qqmusic.qq.com/C400${this.songs[index].mid}.m4a?vkey=${res.data.items[0].vkey}&guid=3786547700&uin=0&fromtag=66`
+        this.selectPlay({
+          list: this.songs,
+          index: index,
+          url: url
+        })
       })
     },
     ...mapActions([

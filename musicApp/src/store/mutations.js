@@ -1,5 +1,5 @@
 import * as types from './mutation-types'
-
+// import { currentSong } from './getters'
 const mutations = {
   [types.SET_SINGER](state, singer) {
     state.singer = singer
@@ -21,6 +21,11 @@ const mutations = {
   },
   [types.SET_CURRENT_INDEX](state, index) {
     state.currentIndex = index
+  },
+  [types.SET_CURRENT_URL](state, url) {
+    if (!state.playlist[state.currentIndex].url) {
+      state.playlist[state.currentIndex].url = url
+    }
   }
 }
 export default mutations

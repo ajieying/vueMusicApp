@@ -20,16 +20,23 @@
        <div class="middle">
          <div class="middle-l">
            <div class="cd-wrapper" ref="cdWrapper">
-             <div class="cd"><img class="image" :src="currentSong.image"></div>
+             <div class="cd" :class="cls"><img class="image" :src="currentSong.image"></div>
            </div>
          </div>
        </div>
        <div class="bottom">
+        <div class="progress-wrapper">
+          <span class="time time-l">{{format(currentTime)}}</span>
+          <div class="progress-bar-wrapper">
+            <progress-bar></progress-bar>
+          </div>
+          <span class="time time-r">{{format(currentSong.duration)}}</span>
+        </div>
          <div class="operators">
            <div class="icon i-left"><i class="icon-sequence"></i></div>
-           <div class="icon i-left"><i class="icon-prev"></i></div>
-           <div class="icon i-center"><i class="icon-play" @click="togglePlaying"></i></div>
-           <div class="icon i-right"><i class="icon-next"></i></div>
+           <div class="icon i-left" :class="disableCls"><i class="icon-prev" @click.stop="prev"></i></div>
+           <div class="icon i-center" :class="disableCls"><i :class="playIcon" @click.stop="togglePlaying"></i></div>
+           <div class="icon i-right" :class="disableCls"><i class="icon-next" @click.stop="next"></i></div>
            <div class="icon i-right"><i class="icon icon-not-favorite"></i></div>
          </div>
        </div>
@@ -37,33 +44,59 @@
     </transition>
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen" @click="open">
-        <div class="icon"><img width="40" height="40" :src="currentSong.image"></div>
+        <div class="icon" :class="cls"><img width="40" height="40" :src="currentSong.image"></div>
         <div class="text">
           <h2 class="name" v-html="currentSong.name"></h2>
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
-        <div class="control"></div>
+        <div class="control">
+          <i @click.stop="togglePlaying" :class="miniIcon"></i>
+        </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSong.url"></audio>
+    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="updateTime"></audio>
   </div>
 </template>
 <script type="text/ecmascript-6">
-import {mapGetters, mapMutations} from 'vuex'
+import {mapGetters, mapMutations, mapActions} from 'vuex'
 import animations from 'create-keyframe-animation'
 import {prefixStyle} from '@/common/js/dom'
+import {getVkey} from '@/api/singer'
+import ProgressBar from '@/base/progress-bar/progress-bar'
 const transform = prefixStyle('transform')
 export default {
+  data() {
+    return {
+      songReady: false,
+      currentTime: 0
+    }
+  },
   computed: {
+    cls() {
+      return this.playing ? 'play' : 'play pause'
+    },
+    playIcon() {
+      return this.playing ? 'icon-pause' : 'icon-play'
+    },
+    miniIcon() {
+      return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+    },
+    disableCls() {
+      return this.songReady ? ' ' : 'disable'
+    },
     ...mapGetters([
       'fullScreen',
       'playlist',
       'currentSong',
-      'playing'
+      'playing',
+      'currentIndex'
     ])
+  },
+  components: {
+    ProgressBar
   },
   methods: {
     back() {
@@ -71,6 +104,70 @@ export default {
     },
     open() {
       this.setFullScreen(true)
+    },
+    next() {
+      if (!this.songReady) {
+        return
+      }
+      let index = this.currentIndex + 1
+      if (index === this.playlist.length) {
+        index = 0
+      }
+      this._submitCurrentIndex(index)
+    },
+    prev() {
+      if (!this.songReady) {
+        return
+      }
+      let index = this.currentIndex - 1
+      if (index === -1) {
+        index = this.playlist.length - 1
+      }
+      this._submitCurrentIndex(index)
+    },
+    _submitCurrentIndex(index) {
+      if (this.playlist[index].url) {
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
+        this.songReady = false
+        return
+      }
+      getVkey(this.playlist[index].mid).then(res => {
+        let url = `https://dl.stream.qqmusic.qq.com/C400${this.playlist[index].mid}.m4a?vkey=${res.data.items[0].vkey}&guid=3786547700&uin=0&fromtag=66`
+        this.switchSong({
+          index: index,
+          url: url
+        })
+        if (!this.playing) {
+          this.togglePlaying()
+        }
+        this.songReady = false
+      })
+    },
+    ready() {
+      this.songReady = true
+    },
+    error() {
+      this.songReady = true
+    },
+    updateTime(e) {
+      this.currentTime = e.target.currentTime
+    },
+    format(intelval) {
+      intelval = intelval | 0 // || 0 相当于向下取整，类似于Math.floor
+      const minute = intelval / 60 | 0
+      const second = this._pad(intelval % 60)
+      return `${minute}:${second}`
+    },
+    _pad(num, n = 2) { // 补位
+      let len = num.toString().length
+      while (len < n) {
+        num = '0' + num
+        len++
+      }
+      return num
     },
     enter(el, done) {
       const {x, y, scale} = this._getPosAndScale()
@@ -129,8 +226,12 @@ export default {
     },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
-      setPlayingState: 'SET_PLAYING_STATE'
-    })
+      setPlayingState: 'SET_PLAYING_STATE',
+      setCurrentIndex: 'SET_CURRENT_INDEX'
+    }),
+    ...mapActions([
+      'switchSong'
+    ])
   },
   watch: {
     currentSong() {
@@ -229,8 +330,10 @@ export default {
                 box-sizing: border-box
                 border-radius: 50%
                 border: 10px solid rgba(255, 255, 255, 0.1)
-              .play
+              &.play
                 animation: rotate 20s linear infinite
+              &.pause
+                animation-play-state: paused
           .playing-lyric-wrapper
             width: 80%
             margin: 30px auto 0 auto
