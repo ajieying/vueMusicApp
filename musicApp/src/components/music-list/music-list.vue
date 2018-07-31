@@ -6,7 +6,7 @@
     <h1 class="title" v-html="title"></h1>
     <div class="bg-image" ref="bgImage" :style="bgStyle">
       <div class="play-wrapper">
-        <div ref="playBtn" v-show="songs.length>0" class="play">
+        <div ref="playBtn" v-show="songs.length>0" class="play" @click="random">
           <i class="icon-play"></i>
           <span class="text">随机播放全部</span>
         </div>
@@ -70,6 +70,7 @@ export default {
   created() {
     this.probeType = 3
     this.listenScroll = true
+    this.url = ''
   },
   mounted() {
     this.imgHeight = this.$refs.bgImage.clientHeight
@@ -114,18 +115,54 @@ export default {
       this.$router.back()
     },
     selectItem(item, index) {
-      getVkey(this.songs[index].mid).then(res => {
-        // console.log(res.data.items[0].vkey)
-        let url = `https://dl.stream.qqmusic.qq.com/C400${this.songs[index].mid}.m4a?vkey=${res.data.items[0].vkey}&guid=3786547700&uin=0&fromtag=66`
-        this.selectPlay({
-          list: this.songs,
+      let $this = this
+      $this.getUrl($this.songs, index, function (url) {
+        $this.selectPlay({
+          list: $this.songs,
           index: index,
           url: url
         })
       })
+      // getVkey(this.songs[index].mid).then(res => {
+      //   // console.log(res.data.items[0].vkey)
+      //   let url = `https://dl.stream.qqmusic.qq.com/C400${this.songs[index].mid}.m4a?vkey=${res.data.items[0].vkey}&guid=3786547700&uin=0&fromtag=66`
+      //   this.selectPlay({
+      //     list: this.songs,
+      //     index: index,
+      //     url: url
+      //   })
+      // })
+    },
+    getUrl(list, index, callback) {
+      const $this = this
+      getVkey(list[index].mid).then(res => {
+        // console.log(res.data.items[0].vkey)
+        $this.url = `https://dl.stream.qqmusic.qq.com/C400${list[index].mid}.m4a?vkey=${res.data.items[0].vkey}&guid=3786547700&uin=0&fromtag=66`
+        typeof callback === 'function' && callback($this.url)
+      })
+    },
+    random() {
+      let $this = this
+      $this.randomPlay({
+        list: $this.songs,
+        callback: function (list) {
+          $this.getUrl(list, 0, function (url) {
+            $this.switchSong({
+              index: 0,
+              url: url
+            })
+            $this.$nextTick(() => {
+              $this.randomSetPlayingState()
+            })
+          })
+        }
+      })
     },
     ...mapActions([
-      'selectPlay'
+      'selectPlay',
+      'randomPlay',
+      'switchSong',
+      'randomSetPlayingState'
     ])
   }
 }
