@@ -1,29 +1,67 @@
 <template>
   <div class="rank" ref="rank">
+    <scroll :data="topList" class="toplist" ref="topList">
       <ul>
-        <li class="item">
+        <li class="item" v-for="(item, idx) in topList" :key="idx">
           <div class="icon">
-            <img width="100" height="100" v-lazy="item.picUrl"/>
+            <img width="100" height="100" v-lazy="item.picUrl" />
           </div>
           <ul class="songlist">
-            <li class="song">
-              <span>index</span>
-              <span>歌曲名-歌手名</span>
+            <li class="song" v-for="(song, index) in item.songList" :key="index">
+              <span>{{index + 1}}</span>
+              <span>{{song.songname}} - {{song.singername}}</span>
             </li>
           </ul>
         </li>
       </ul>
+      <div class="loading-container" v-if="!topList.length">
+        <loading></loading>
+      </div>
+    </scroll>
+    <router-view></router-view>
   </div>
 </template>
-
 <script type="text/ecmascript-6">
-export default {}
+import {getTopList} from '@/api/rank'
+import {ERR_OK} from '@/api/config'
+import Scroll from '@/base/scroll/scroll'
+import Loading from '@/base/loading/loading'
+import {playlistMixin} from '@/common/js/mixin'
+
+export default {
+  mixins: [playlistMixin],
+  data() {
+    return {
+      topList: []
+    }
+  },
+  components: {
+    Scroll,
+    Loading
+  },
+  created() {
+    this._getTopList()
+  },
+  methods: {
+    handlePlaylist(playlist) {
+      const bottom = playlist.length ? '60px' : ''
+      this.$refs.rank.style.bottom = bottom
+      this.$refs.topList.refresh()
+    },
+    _getTopList() {
+      getTopList().then((res) => {
+        if (res.code === ERR_OK) {
+          this.topList = res.data.topList
+        }
+      })
+    }
+  }
+}
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~@/common/stylus/variable"
   @import "~@/common/stylus/mixin"
-
   .rank
     position: fixed
     width: 100%

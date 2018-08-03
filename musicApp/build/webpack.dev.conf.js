@@ -123,6 +123,28 @@ const devWebpackConfig = merge(baseWebpackConfig, {
           console.log(e)
         })
       })
+      app.get('/api/getSongList', (req, res) => {
+        const url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
+        axios.get(url,{
+          headers:{
+            referer:`https://y.qq.com/n/yqq/playsquare/${req.query.disstid}.html`,
+            host:'y.qq.com'
+          },
+          params:req.query,
+        }).then((resopnse)=>{
+          var ret = resopnse.data
+          if (typeof ret === 'string') {
+            var reg = /^\w+\(({[^()]+})\)$/
+            var matches = JSON.stringify(ret).match(reg)
+            if (matches) {
+              ret = JSON.parse(matches[1])
+            }
+          }
+          res.json(ret)
+        }).catch((e)=>{
+          console.log(e)
+        })
+      })
     }
   },
   plugins: [
